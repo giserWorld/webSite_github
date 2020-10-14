@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>index</title>
+	<link rel="stylesheet" type="text/css" href="http://139.198.11.48:8088/arcgis_js_v46_api/arcgis_js_api/library/4.6/esri/css/main.css"/>
+	<script type="text/javascript" src="http://139.198.11.48:8088/arcgis_js_v46_api/arcgis_js_api/library/4.6/init.js"></script>
+	<style type="text/css">
+		html,body,#viewdiv{
+			width:100%;
+			height:100%;
+			padding:0px;
+			margin:0px;
+		}
+	</style>
+<script type="text/javascript">
+require(["esri/Map",
+          "esri/views/SceneView",
+          "dojo/on",
+          "dojo/dom",
+          "esri/layers/GraphicsLayer",
+          "esri/Camera",
+          "esri/config",
+          "esri/layers/WebTileLayer",
+	      "dojo/domReady!"],
+function(Map,SceneView,on,dom,GraphicsLayer,Camera,esriConfig,WebTileLayer)
+{
+/*********************添加跨域服务器***********************/  
+esriConfig.request.corsEnabledServers.push("localhost");//访问本地项目页面用192.168.1.xxIP地址
+esriConfig.request.corsEnabledServers.push("http://mt3.google.cn/vt/lyrs=s&hl=zh-CN&gl=cn&x=${col}&y=${row}&z=${level}");
+/***********************相机视角*************************/    
+//中国范围相机视角
+var china_camera=new Camera({
+fov:55,
+heading:346.7815744065348,
+tilt:0.10001711412473703,
+position:{
+x:11537850.25728918,
+y:4672008.976377237,
+z:25512547.92879804,
+spatialReference:{wkid:102100}
+}
+}); 
+//云南范围相机视角
+var yunnan_camera=new Camera({
+fov:55,
+heading:0,
+tilt:0.3882634288761872,
+position:{
+x:11446648.350099333,
+y:2872946.9661045033,
+z:1838248.1626968682,
+spatialReference:{wkid:102100}
+}
+});
+
+
+/***********************地图*************************/  
+var mymap=new Map({
+//basemap:"satellite",
+ground: "world-elevation"
+});
+var sceneview=new SceneView({
+container:"viewdiv",
+map:mymap,
+camera:yunnan_camera,
+environment:{starsEnabled:true}
+});	
+var google_TiledLyr=new WebTileLayer({
+id:"googleMap",
+title:"谷歌影像",
+urlTemplate:"http://mt3.google.cn/vt/lyrs=s&hl=zh-CN&gl=cn&x=${col}&y=${row}&z=${level}"
+});
+mymap.add(google_TiledLyr);
+sceneview.when(function(){
+    
+		    
+});//when e
+
+/**************************sceneview.then外***********************/
+
+		
+/*********************************函数***************************************/
+
+
+});//require e
+</script>
+</head>
+<body>
+	<div id="viewdiv"></div>
+</body>
+</html>
