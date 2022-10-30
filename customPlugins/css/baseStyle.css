@@ -1,9 +1,0 @@
-@CHARSET "UTF-8";
-/* 更新时间:2020.04.01 wxt*/
-html,body,#viewdiv,#cesiumDiv{
-margin:0px;
-padding:0px;
-height:100%;
-width:100%
-}
-

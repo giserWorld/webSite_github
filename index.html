@@ -1,17 +1,298 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<title>欢迎来到gisWorld世界！</title>
-	<link rel="stylesheet" type="text/css" href="./customPlugins/css/baseStyle.css"> 
-	<link rel="stylesheet" type="text/css" href="./main/css/index.css"> 
-	</head>
+	<meta charset='utf-8' />
+	<title>test-index</title>
+	<link rel="stylesheet" href="./js/mapbox-gl-2.10.0.css">
+	<script type="text/javascript" src="./js/mapbox-gl-2.10.0.js"></script>
+	<script type="text/javascript" src="./js/turf-5.1.6.min.js"></script>
+	<style>
+	html,body,.mapboxDiv{
+	width:100%;
+	height:100%;
+	padding:0px;
+	margin:0px;
+	}
+	.mapboxDiv{
+	background: #11273C;
+	z-index:1;	
+	position: relative;	
+	overflow: hidden;
+	}
+	</style>
+</head>
 <body>
-	<div>
-		<h2>欢迎来到gisWorld世界！</h2>
-	<div/>
-	<script src="./apiFiles/jquery/js/jquery-2.2.3.min.js"></script>
-	<script src="./customPlugins/js/jqueryUtilityFun.js"></script>
-	<script src="./main/js/index.js"></script>
+	<div class="mapboxDiv" id='mapboxDiv'></div>
+	<div class="baseStyle" style="position:absolute;left:100px;top:100px;">
+		<div id="showRes" style="color:white;"></div>
+	</div>
+	<script>
+	/**************************index************************
+	*1.一个全局mapboxgl地图对象
+	*/
+/*******************************底图*******************************/
+   //天地图影像
+   var satelite_tdt={
+	   "title":"天地图影像",
+       "id":"satelite_tdt",
+       "type":"raster",
+       "source":{
+	   	   "type":"raster",
+	   	   "maxzoom":18,
+	       "tiles": [
+	    	   "http://t7.tianditu.com/DataServer?tk=00c6e9c1be799e44a2e2f4fb801223cd&T=img_w&x={x}&y={y}&l={z}"
+	        ],
+	        "tileSize":256
+       }
+   };
+   //天地图影像标注
+   var satellite_text={
+	   "title":"天地图影像标注",
+       "id":"satelite_text",
+       "type":"raster",
+       "source":{
+	   	   "type":"raster",
+	   	   "maxzoom":18,
+	       "tiles":[
+	    	   "http://t7.tianditu.com/DataServer?tk=00c6e9c1be799e44a2e2f4fb801223cd&T=cia_w&x={x}&y={y}&l={z}"
+	        ],
+	        "tileSize":256
+       }
+   };
+/*******************************地图******************************/
+	mapboxgl.accessToken='pk.eyJ1IjoieGlhb3RpYW42MDI1NzQ0MzYiLCJhIjoiY2p6OTk1bW12MHE4cjNocXhyNmJyOXc2ayJ9.XQ_uJ1rir30os370Y1_Z8g';
+	var mymap = new mapboxgl.Map({
+	    container:"mapboxDiv",
+	    style:{version:8,sources:{},layers:[]},
+	    zoom:7,
+		center:[102.21,24.02]
+   });
+   //extent定位
+   var extent_4326=[[104.91530813621233,31.91517946436379],[104.9320991484701,31.923426665534034]];
+   mymap.fitBounds(extent_4326,{linear:true,maxZoom:18});
+   mymap.addControl(new mapboxgl.NavigationControl(),"top-left");//基础控件
+   let _self={};
+/******************************监控属性*****************************/	 
+	mymap.on("zoomend",function(evt){//地图层级改变后触发
+		var mapZoom=mymap.getZoom();
+		//$("#showRes").text("zoom:"+mapZoom);
+	});
+/******************************地图事件*****************************/
+   mymap.on("click",(e)=>{mouseClickFun(e)});//鼠标click事件
+mymap.on("load",function(evt){//地图加载完成
+	mymap.addLayer(satelite_tdt);//添加影像图层
+	//mymap.addLayer(satellite_text);//添加影像标注
+/******************************相关代码*****************************/	
+	//wms图层
+    window.wmsUrl="http://nky.feelbang.com:8081/geoserver/cite/wms?layers=cite:制种水稻"; 
+    var layers="";
+    var layerName="";
+	var cql_filter="";//sss_code=51
+	var style="";
+	var sldStr="";
+	var layerAttr={
+		//extent:layerExtent
+	};
+	var wmsLayer=createWMSLayer_wms(wmsUrl,layers,layerName,cql_filter,style,sldStr,layerAttr);
+ 	mymap.addLayer(wmsLayer);	
+		
+		
+		
+});//end
+/******************************函数*****************************/
+function createWMSLayer_wms(wmsUrl,layers,layerName="",cql_filter="1=1",style="",sldStr,layerAttr={}){
+let wmsLayer="";
+let urlParam=urlParamToObject(wmsUrl)||{};
+cql_filter=cql_filter || "1=1";
+layerName=layerName || "未命名";
+layers=layers||urlParam.layers;//layers参数优先
+style=style||"";
+sldStr=(sldStr&&sldStr!="no")?sldStr:"";
+let attr=layerAttr||{};
+attr=Object.assign({},attr);//复制对象
+let layerStatus=attr.layerStatus==false?false:true;
+let tileMatrixSet=attr.tileMatrixSet=="EPSG:4326"?"EPSG:4326":"EPSG:900913";//默认:3857坐标系
+let extent=layerAttr.extent||null;//显示范围
+let minResolution=layerAttr.minResolution||0;
+let maxResolution=layerAttr.maxResolution||Infinity;
+attr.layerName=layerName;
+attr.layerId=layers;
+attr.wmsUrl=wmsUrl;
+attr.tileMatrixSet=tileMatrixSet;
+attr.cql_filter=cql_filter;//更新"cql_filter"
+let url='';
+let params={//查询参数,必须为大写
+service:"WMS",
+request:"GetMap",
+bbox:"{bbox-epsg-3857}",
+width:256,
+height:256,
+srs:"EPSG:3857",
+TRANSPARENT:true,//是否透明
+FORMAT:"image/png",//请求的格式
+LAYERS:layers,
+INFO_FORMAT:"application/json",
+STYLES:style,//动态渲染样式
+//sld_body:sldStr,
+cql_filter:cql_filter
+};
+if(sldStr)params.sld_body=window.encodeURIComponent(sldStr);		
+if(cql_filter=="no")delete params.cql_filter;
+if(wmsUrl){
+for(let key in params){
+url=url+'&'+key+'='+params[key];
+}
+wmsUrl=wmsUrl+url;
+wmsLayer={
+"title":layerName,
+"layerId":layers,
+"id":layers,
+"type":"raster",
+"source": {//栅格数据源
+"type": "raster",
+'tileSize':256,
+"tiles": [wmsUrl],
+},
+"metadata":attr,
+"layout":{
+"visibility": "visible",
+},
+"paint":{ 
+//"raster-opacity": 0.7
+}
+}
+}
+if(extent){
+wmsLayer.source.bounds=extent;
+}
+return wmsLayer;
+}//e
+function urlParamToObject(url=""){
+let paramObject={};
+if(/\?/.test(url)){
+let urlString = url.substring(url.indexOf("?")+1); 
+let urlArray=urlString.split("&"); 
+for (let i=0,len=urlArray.length;i<len;i++) { 
+let urlItem=urlArray[i]; 
+var idx=urlItem.indexOf("=");
+let name=urlItem.substring(0,idx);
+let value=urlItem.substring(idx+1);
+paramObject[name]=value; 
+} 
+}
+return paramObject;
+}//e
+function paramObjectToUrl(baseUrl,params){
+if(!baseUrl||!params)return false;
+//过滤任何空值或未定义的参数值
+let keyParams = []; 
+Object.keys(params).forEach(function (k){
+if(params[k] !== null && params[k] !== undefined){
+//keyParams.push(k + '=' + encodeURIComponent(params[k]));//特殊字符进行编码
+keyParams.push(k + '=' + params[k]);//特殊字符不进行编码
+}
+});
+let qs=keyParams.join('&'); // remove any trailing ? or &
+baseUrl = baseUrl.replace(/[?&]$/, ''); // append ? or & depending on whether uri has existing parameters
+baseUrl = baseUrl.indexOf('?') === -1 ? baseUrl + '?' : baseUrl + '&';
+return baseUrl + qs;
+}//e
+//*****************************鼠标click拾取地图要素********************************//
+function mouseClickFun(clickEvt){
+	let screenCoord=[clickEvt.point.x,clickEvt.point.y];//屏幕坐标
+	let coordinate=[clickEvt.lngLat.lng,clickEvt.lngLat.lat];//大地坐标
+	let clickBbox=[[clickEvt.point.x-5,clickEvt.point.y-5],[clickEvt.point.x+5,clickEvt.point.y+5]];//点击点周围的5px reactangle区域
+	let pickFeats=mymap.queryRenderedFeatures(screenCoord,{
+		//layers:["counties"]//拾取要素的图层,如果未定义,则查询所有图层
+	});
+	if(pickFeats&&pickFeats.length>0){//拾取矢量要素
+		let topFeat=pickFeats[pickFeats.length-1];//最顶部的几何要素
+    	let attr=topFeat.properties;
+		let jsonGeo=topFeat.geometry;
+		let layerId=topFeat.layer.id;//图层id
+		let sourceId=topFeat.layer.source;//数据源id
+		
+		console.log("***************拾取矢量要素***************");
+		console.log(topFeat);
+    }
+	
+	//拾取wms要素
+	var mapZoom=mymap.getZoom();
+	var value=Math.pow(2,22-mapZoom);
+	var coord_3857=turf.toMercator(coordinate);
+	var xmin=coord_3857[0] - value;
+	var ymin=coord_3857[1] - value;
+	var xmax=coord_3857[0] + value;
+	var ymax=coord_3857[1] + value;
+	var bbox=[xmin,ymin,xmax,ymax];
+	let params={
+      SERVICE:"WMS",
+      VERSION:"1.1.1",
+      REQUEST:"GetFeatureInfo",
+      FORMAT:"image/png",
+      INFO_FORMAT:"application/json",
+      TRANSPARENT: true,
+      X:50,
+      Y:50,
+      SRS:"EPSG:3857",
+      WIDTH:101,
+      HEIGHT:101,
+      LAYERS:"cite:制种水稻",
+      QUERY_LAYERS:"cite:制种水稻",
+      STYLES:"",
+      //FEATURE_COUNT:50,
+      //BBOX:102.073974609375,31.57470703125,104.293212890625,33.7939453125
+    };
+	params["BBOX"]=bbox.join(',');//瓦片范围
+	//var wmsUrl=wmsUrl; 
+	var featureInfoUrl=paramObjectToUrl(wmsUrl,params);
+	window.fetch(featureInfoUrl).then(response=>response.json()).then((result)=>{
+		  var jsonFeat=result.features[0];//wms拾取的Feature
+ 		  var crs=result.crs?result.crs.properties.name:"";//crs
+ 		  crs=crs.match("3857")?"EPSG:3857":"EPSG:4326"
+ 		  if(!jsonFeat)return false;
+ 		  var jsonGeo=jsonFeat.geometry||"";//geojson
+ 		  var attr=jsonFeat.properties||{};//attr
+ 		  jsonGeo.crs=crs;
+ 		  var id=jsonFeat.id||"";//要素id,"china_zhoushi_chouxi.71"
+ 		  console.log(attr);
+ 		  
+			//弹框信息
+			var infoPopup=new mapboxgl.Popup({
+				className:"myPopup",
+				closeButton:true,
+				closeOnClick:true,
+				//anchor:'bottom',//自动锚点
+				offset:[0,-15]
+			});
+ 			var htmlStr="<div class='contentDiv'>"
+ 			var info={
+ 				"CZ":'',
+ 				"DKMC":'',
+ 				"HBMJ":'',
+ 				"QX":'',
+ 				"SFZH":'',
+ 				"TBMJ":'',
+ 				"TBR":'',
+ 				"XZ":'',
+ 				"OBJECTID":''
+ 			};
+			for(var key in info){
+				htmlStr=htmlStr+"<p>"+key+":"+attr[key]+"</p>";
+			}
+ 			htmlStr=htmlStr+"</div>";
+ 			infoPopup.setHTML(htmlStr);
+ 			infoPopup.setLngLat(coordinate);
+ 			infoPopup.addTo(mymap);
+	});
+	
+	
+	
+}//e
+	 
+	
+	
+</script>
+ 
 </body>
 </html>
