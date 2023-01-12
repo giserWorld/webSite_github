@@ -1,0 +1,58 @@
+{
+  "id": "1997618",
+  "name": "test_fonticon",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "测试",
+  "glyphs": [
+    {
+      "icon_id": "839002",
+      "name": "圆点",
+      "font_class": "yuandian",
+      "unicode": "e630",
+      "unicode_decimal": 58928
+    },
+    {
+      "icon_id": "1028153",
+      "name": "圆",
+      "font_class": "yuan",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "3248595",
+      "name": "图层",
+      "font_class": "tuceng",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "5330820",
+      "name": "圆点",
+      "font_class": "yuandian1",
+      "unicode": "e7c2",
+      "unicode_decimal": 59330
+    },
+    {
+      "icon_id": "6129153",
+      "name": "111指南针、发现、导航、地址、位置",
+      "font_class": "zhinanzhenfaxiandaohangdizhiweizhi",
+      "unicode": "e788",
+      "unicode_decimal": 59272
+    },
+    {
+      "icon_id": "6250621",
+      "name": "暂无",
+      "font_class": "zanwu",
+      "unicode": "e70c",
+      "unicode_decimal": 59148
+    },
+    {
+      "icon_id": "13636959",
+      "name": "菜单",
+      "font_class": "caidan",
+      "unicode": "e64d",
+      "unicode_decimal": 58957
+    }
+  ]
+}

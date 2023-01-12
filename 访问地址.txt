@@ -1,1 +1,5 @@
-https://giserworld.github.io/myWebsite/
+主页面：
+  https://giserworld.github.io/website_gitee/index.html
+
+子目录:
+  https://giserworld.github.io/website_gitee/testPage/index.html
