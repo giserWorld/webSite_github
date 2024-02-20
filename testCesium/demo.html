@@ -5,22 +5,9 @@
 	<title>demo</title>
 	<link rel="shortcut icon" href="#"/>
 	<link rel="stylesheet" type="text/css" href="../lib/cesium/1.113/Cesium/Widgets/widgets.css">
+	<link rel="stylesheet" type="text/css" href="./customPlugins/css/myCesium.css">
 	<script type="text/javascript" src="../lib/cesium/1.113/Cesium/Cesium.js"></script>
 	<style>
-		html,body{
-			margin: 0px;
-			padding: 0px;
-			width: 100%;
-			height: 100%;
-		}
-		.cesiumDiv {
-			width: 100%;
-			height: 100%;
-			background: #11273c;
-			z-index: 1;
-			position: relative;
-			overflow: hidden;
-		}
 		.baseStyle{
 			position:absolute;
 			top:100px;
@@ -44,29 +31,29 @@
 	<script>
 /*******************************底图*******************************/
 	//卫星影像
-	// var satelliteLayer_google=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({
-	// 	credit:"谷歌影像",
-	// 	//url:"http://mt3.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}",//无偏移谷歌影像  
-	// 	//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=img_w&x={x}&y={y}&l={z}",//天地图影像  
-	// 	url:"https://tiles.geovisearth.com/base/v1/img/{z}/{x}/{y}?token=3ffa44dd1dcdd31b285da59e8ad30be457f80fe2b035840a8bfdcb5ab7512d31",
-	// 	maximumLevel:18,
-	// 	enablePickFeatures:false,//数据拾取
-	// }),{brightness:1.3});
-	// //天地图影像文字
-	// var satelliteLayer_tdt_text=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({  
-	// 	credit:"天地图影像文字",
-	// 	//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=cia_w&x={x}&y={y}&l={z}", 
-	// 	url:"https://tiles.geovisearth.com/base/v1/cia/{z}/{x}/{y}?token=3ffa44dd1dcdd31b285da59e8ad30be457f80fe2b035840a8bfdcb5ab7512d31",
-	// 	maximumLevel:18,
-	// 	enablePickFeatures:false,//数据拾取
-	// }),{});
-    // //单张图片服务
-    // const mapsingleLayer=new Cesium.ImageryLayer(new Cesium.SingleTileImageryProvider({
-    // 	credit:"单张图片",
-	// 	tileWidth:256,//1.108后版本必须设置
-	// 	tileHeight:256,//1.108后版本必须设置
-    //     url:"./customPlugins/utilityIcons/globe.jpg",
-    // }),{});
+	var satelliteLayer_google=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({
+		credit:"谷歌影像",
+		//url:"http://mt3.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}",//无偏移谷歌影像  
+		//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=img_w&x={x}&y={y}&l={z}",//天地图影像  
+		url:"https://tiles.geovisearth.com/base/v1/img/{z}/{x}/{y}?token=3ffa44dd1dcdd31b285da59e8ad30be457f80fe2b035840a8bfdcb5ab7512d31",
+		maximumLevel:18,
+		enablePickFeatures:false,//数据拾取
+	}),{brightness:1.3});
+	//天地图影像文字
+	var satelliteLayer_tdt_text=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({  
+		credit:"天地图影像文字",
+		//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=cia_w&x={x}&y={y}&l={z}", 
+		url:"https://tiles.geovisearth.com/base/v1/cia/{z}/{x}/{y}?token=3ffa44dd1dcdd31b285da59e8ad30be457f80fe2b035840a8bfdcb5ab7512d31",
+		maximumLevel:18,
+		enablePickFeatures:false,//数据拾取
+	}),{});
+    //单张图片服务
+    const mapsingleLayer=new Cesium.ImageryLayer(new Cesium.SingleTileImageryProvider({
+    	credit:"单张图片",
+		tileWidth:256,//1.108后版本必须设置
+		tileHeight:256,//1.108后版本必须设置
+        url:"./customPlugins/utilityIcons/globe.jpg",
+    }),{});
 	//四川天地图地形
 	/* var tdtTerrain_sichuan=new Cesium.CesiumTerrainProvider({
 		title:"四川天地图地形",
@@ -92,8 +79,31 @@
 	//var worldTerrain=Cesium.createWorldTerrain();
 /*******************************地图******************************/
 	//创建地图
-	var viewer=new Cesium.Viewer("cesiumDiv");
-
+	var viewer=new Cesium.Viewer("cesiumDiv",{
+		animation:false,//时钟
+		timeline:false,//时间轴
+		shouldAnimate: true,//是否开启时间动画
+		infoBox:false,//是否显示拾取信息框
+		selectionIndicator:false,//要素选择框
+		fullscreenButton:false,//全屏组件
+		baseLayerPicker:false,//底图影像拾取器组件
+		geocoder:false,
+		homeButton:false,
+		navigationHelpButton:false,
+		sceneModePicker:false,
+		contextOptions: {//scene渲染设置
+			requestWebgl1: false,//是否使用webgl1渲染,默认false
+			webgl: { alpha: true}//webgl渲染配置,传递给canvas.getContext
+		},
+		mapProjection:new Cesium.WebMercatorProjection(),//2D模式使用的坐标系,默认“4326”，可选值:“GeographicProjection”或“WebMercatorProjection”
+		sceneMode:Cesium.SceneMode.SCENE3D,//初始场景模式,“Cesium.SceneMode.SCENE2D”、“Cesium.SceneMode.SCENE3D”
+		scene3DOnly:true,//如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源,当scene3DOnly为true时，只有SceneMode.SCENE3D有效
+		baseLayer:mapsingleLayer,//应用于地球的最底层图像层,代替imageryProvider
+		//imageryProvider:mapsingle,//底图影像提供者，默认加载cesium影像，必须设置该属性，否则加载cesium影像(系统默认一个地图影像会全局拉伸覆盖)
+		//地形
+		//terrainProvider:marsTerrain,//地形(老版本)
+		//terrain:marsTerrain,//地形(新版本)
+	});
 	</script>
 </body>
 </html>
