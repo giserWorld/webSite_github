@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>index-latest</title>
+	<link rel="shortcut icon" href="#"/>
+	<link rel="stylesheet" type="text/css" href="../lib/cesium/1.113/Cesium/Widgets/widgets.css">
+	<script type="text/javascript" src="../lib/cesium/1.113/Cesium/Cesium.js"></script>
+	<style>
+		.baseStyle{
+			position:absolute;
+			top:100px;
+			left:100px;
+			color:white;
+			background: rgba(0,0,0,0.3);
+			padding: 15px;
+    		border: 4px;
+		}
+		.baseStyle button{
+			display: block;
+		    margin: 10px 0;
+   		}
+	</style>
+</head>
+<body>
+	<div class="cesiumDiv" id="cesiumDiv"></div>
+	<div class="baseStyle">
+		<div id="showRes" style="color:white;"></div>
+	</div>
+	<script>
+/*******************************地图******************************/
+	//创建地图
+	var viewer=new Cesium.Viewer("cesiumDiv");	
+    var _self={};
+/******************************相关代码*****************************/	
+
+
+
+
+
+/*******************************函数*******************************/		
+console.log("viewerMap:",viewer); 
+
+/******************************scene场景鼠标doubleClick拾取地图要素(scene.canvas)*****************************/
+function mouseDoubleClickFun(doubleClickEvt,viewer){
+    let screenCoord=doubleClickEvt.position;//屏幕坐标
+    let picFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的单个地物
+}//e
+
+/******************************scene场景鼠标click拾取地图要素(scene.canvas)*****************************/
+function mouseClickFun(clickEvt){
+	if(clickHighLightLayer)clickHighLightLayer.removeAll();
+	var screenCoord=clickEvt.position;//屏幕坐标
+    var cameraRay=viewer.camera.getPickRay(screenCoord);//获取相机位置到点击的射线
+    var cartesian3=viewer.scene.globe.pick(cameraRay,viewer.scene);//拾取的椭球体表面位置
+    if(!cartesian3)return false;
+    var cartographic=viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian3);//cartesian3坐标转地理弧度坐标
+    var lon=Cesium.Math.toDegrees(cartographic.longitude);//经度
+    var lat=Cesium.Math.toDegrees(cartographic.latitude);//纬度
+    var ele=eval(cartographic.height)>0?cartographic.height:0;//地形海拔
+    var pickFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的多个地物
+    //const mapDiv=viewer.container;//获取地图容器div节点
+ 	//过滤不需要拾取的矢量要素
+ 	pickFeats=pickFeats.filter((item)=>{
+	    const entityFeature=item.id;//实体
+	    const primitiveFeature=item.primitive;//图元
+	    if(entityFeature&&entityFeature instanceof Cesium.Entity){
+	      const geoAttr=entityFeature.properties?.getValue(Cesium.JulianDate.now());
+	      return geoAttr.enablePickFeatures===false?false:true;
+	    }
+	    else if(primitiveFeature&&entityFeature instanceof Cesium.Primitive){
+	    	 const geoAttr=primitiveFeature.id||{};
+	    	 return geoAttr.enablePickFeatures===false?false:true;
+	    }
+ 	 });
+     console.log("pickFeats:",pickFeats);
+	 if(pickFeats.length>0){//拾取到要素
+		 const topFeat=pickFeats[pickFeats.length-1].id;//最顶部的几何要素
+		 const primitiveFeat=pickFeats[pickFeats.length-1].primitive;//primitive图元要素 
+		//entity
+		 if(topFeat instanceof Cesium.Entity){
+	    	 const entityId=topFeat.id;//唯一标识id
+	    	 const geoAttr = topFeat.properties.getValue(Cesium.JulianDate.now());//要素属性
+	    	 const layerId=geoAttr.layerId;//实体关联的图层id
+	    	 console.log("topFeat:",topFeat);
+     	 }
+		 //primitive
+	     else if(primitiveFeat instanceof Cesium.Primitive){
+	    	 const geoAttr=topFeat||{};//GeometryInstance.id为属性
+	    	 console.log("primitiveFeat:",primitiveFeat);
+	     }
+	 }
+}//e
+   
+
+/******************************viewer鼠标hover拾取地图要素(viewer.canvas)*****************************/	
+var hoverSelectedFeatId=-1;
+var hoverSelectedFeat={};//hover选中的实体
+function mouseMoveFun(moveEvt){
+  	 var screenCoord=moveEvt.endPosition;//屏幕坐标
+     var cameraRay=viewer.camera.getPickRay(screenCoord);//获取相机位置到点击的射线
+     var cartesian3=viewer.scene.globe.pick(cameraRay,viewer.scene);//拾取的椭球体表面位置
+     if(!cartesian3)return false;
+     var cartographic=viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian3);//cartesian3坐标转地理弧度坐标
+     var lon=Cesium.Math.toDegrees(cartographic.longitude);//经度
+     var lat=Cesium.Math.toDegrees(cartographic.latitude);//纬度
+     var ele=eval(cartographic.height)>0?cartographic.height:0;//地形海拔
+     var pickFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的多个地物
+  	 const mapDiv=viewer.container;//获取地图容器div节点
+  	 //过滤不需要拾取的矢量要素
+  	 pickFeats=pickFeats.filter((item)=>{
+	    const entityFeature=item.id;//实体
+	    if(entityFeature&&entityFeature instanceof Cesium.Entity){
+	      const geoAttr=entityFeature.properties?.getValue(Cesium.JulianDate.now());
+	      return geoAttr.enablePickFeatures===false?false:true;
+	    }
+  	 });
+	 if(pickFeats.length>0){//拾取到要素
+		 mapDiv.style.cursor='pointer';//当鼠标拾取地图要素后改变鼠标指针
+		 //let topEntity=myCesium.getTopEntityFeat(picFeats,_self.mapLyrCollection);//拾取上面的实体
+		 const topFeat=pickFeats[pickFeats.length-1].id;//最顶部的几何要素
+		 let primitiveFeat=pickFeats[pickFeats.length-1].primitive;//primitive图元要素 
+	     if(topFeat instanceof Cesium.Entity){//entity
+	    	 const entityId=topFeat.id;//唯一标识id
+	    	 const geoAttr = topFeat.properties.getValue(Cesium.JulianDate.now());//要素属性
+	    	 const layerId=geoAttr.layerId;//实体关联的图层id
+	         if(entityId!==hoverSelectedFeatId){//选中的不是同一个实体,则设置样式
+       	   		  if(hoverHighLightLayer) hoverHighLightLayer.removeAll();
+            	  var selectedEntity=viewer.entities.getById(hoverSelectedFeatId)||"";
+                  if(selectedEntity&&selectedEntity.billboard){
+                     selectedEntity.billboard.scale=1.0;
+                 	}
+                 	if(selectedEntity&&selectedEntity.point){
+                     var pixelSize=selectedEntity.point.pixelSize.getValue();
+                     if(Number.isInteger(pixelSize/1.337))selectedEntity.point.pixelSize=pixelSize/1.337;  
+                 	}
+                  var priFeat=myCesium.lightFeat_custom_pri(hoverHighLightLayer,entityFeat,"#00FFFF","true");//高亮要素
+                  hoverSelectedFeatId=entityId;
+                  hoverSelectedFeat=topFeat;
+	         }
+	       }
+	       else if(entityFeat&&(typeof(entityFeat)=="string")){//primitive
+	        //console.log(entityFeat);
+	       }
+	 }
+	 else{//没有拾取到要素
+	 	mapDiv.style.cursor="default";
+	 	if(hoverHighLightLayer) hoverHighLightLayer.removeAll();
+        var selectedEntity=viewer.entities.getById(hoverSelectedFeatId)||"";
+        if(selectedEntity&&selectedEntity.billboard){
+            selectedEntity.billboard.scale=1.0;
+        }
+        if(selectedEntity&&selectedEntity.point){
+           var pixelSize=selectedEntity.point.pixelSize.getValue();
+           if(Number.isInteger(pixelSize/1.337))selectedEntity.point.pixelSize=pixelSize/1.337;  
+        }
+        hoverSelectedFeatId=-1;
+        hoverSelectedFeat={};
+    }
+}//e
+	</script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+@CHARSET "UTF-8";
+/* 更新时间:2020.08.11 */
+a{
+text-decoration: none;
+color:white;
+}
+a:hover{
+cursor: pointer!important;
+text-decoration: none!important;
+}
+div,span{
+cursor: inherit;
+}
+.legendContainer{
+display:block;
+color:white;
+width:100%;
+border: 1px solid #b5b1b1;
+}
+.legend_ul{
+list-style: none;
+padding: 0px;
+margin: 0px;
+min-width: 130px;
+display:block;
+padding-bottom: 15px;
+}
+.legend_ul_li{
+text-align: center;
+vertical-align: middle;
+}
+.legend_title{
+font-size: 18px;
+font-family: sans-serif;
+color:white;
+padding: 5px 0px;
+}
+.legend_li_a{
+border: 0px solid white;
+width: 100%;
+display: flex;
+justify-content:center;
+align-items:center;
+}
+.legend_checkboxDiv{
+display: inline-block;
+width: 15%;
+margin-right: 10px;
+}
+.legend_checkbox{
+width: 16px;
+height: 16px;
+margin-top: 5px;
+}
+.legend_imgDiv{
+width: 20%;
+text-align: center;
+border:0px solid blue;
+padding-top: 8px;
+}
+.legend_img{
+width: 20px;
+display: block;
+margin-top: 2px;
+}
+.legend_text{
+width: 85%;
+border: 0px solid green;
+color: white;
+font-size: 14px;
+/* display: flex; */
+text-align: center;
+}
+.legend_changeDiv{
+border:0px solid yellow;
+width: 20%; 
+color: white;
+}
+/* 分层图例 */
+.legendContainer2{
+display:block;
+color:white;
+width:100%;
+border: 1px solid #b5b1b1;
+}
+.legend_ul2{
+list-style: none;
+padding: 0px;
+margin: 0px;
+display:block;
+min-width: 130px;
+padding-bottom: 15px;
+}
+.legend_ul_li2{
+text-align: center;
+vertical-align: middle;
+}
+.legend_title2{
+font-size: 18px;
+font-family: sans-serif;
+color:white;
+padding: 5px 0px;
+}
+.legend_li_a2{
+border: 0px solid white;
+width: 100%;
+display: flex;
+justify-content:center;
+align-items:center;
+padding:0px;
+}
+.legend_checkboxDiv2{
+display: inline-block;
+width: 25%;
+margin-top: 2px;
+}
+.legend_checkbox2{
+width: 16px;
+height: 16px;
+margin-top: 5px;
+}
+.legend_imgDiv2{
+width: 15%;
+text-align: center;
+border:0px solid blue;
+}
+.legend_img2{
+width: 20px;
+display: block;
+}
+.legend_text2{
+width: 75%;
+border:0px solid green;
+color: white;
+font-size: 14px;
+display: flex;
+}
+.legend_changeDiv2{
+border:0px solid yellow;
+width: 20%; 
+color: white;
+}
+.legend_text3{
+width: 80%;
+}
+.legend_imgDiv3{
+padding-left: 20%;	
+}
+.legend_xzStyle{
+display: block;
+vertical-align: middle;
+margin: 0px 10px;
+float: left;
+}
+.legend_xzStyle2{
+display: block;
+vertical-align: middle;
+margin-right: 10px;
+margin-top: 2px;
+}
+.legend_checkboxDiv3{
+visibility: hidden;
+}
+/* 无checkbox图例 */
+.legend_ul5{
+list-style: none;
+padding: 0px;
+margin: 0px;
+min-width: 130px;
+display:block;
+padding-bottom: 15px;
+}
+.legend_ul_li5{
+text-align: center;
+vertical-align: middle;
+}
+.legend_title5{
+font-size: 18px;
+font-family: sans-serif;
+color:white;
+padding: 5px 0px;
+}
+.legend_li_a5{
+border: 0px solid white;
+/* width: 100%; */
+display: flex;
+justify-content:center;
+align-items:center;
+padding-left: 20px;
+}
+.legend_imgDiv5{
+width: 20%;
+text-align: center;
+border:0px solid blue;
+padding-top: 8px;
+}
+.legend_img5{
+width: 20px;
+display: block;
+border: 0px solid yellow;
+}
+.legend_xzStyle5{
+width: 20%;
+margin-top: 3px; 
+}
+.legend_text5{
+width: 80%;
+border: 0px solid green;
+color: white;
+font-size: 14px;
+display: flex;
+padding-top: 3px;
+}
+.legend_xzText5{
+color: white;
+}
+.closeLyrStyle{
+color: #6d6969;
+}
+.legend_name5{
+padding-left: 6px;
+}
+.legendContainer .legend_img5{
+width: 16px;
+}
+.legendContainer2 .legend_img2{
+width: 16px;	
+}
+.legendContainer2 #legend_ul3{
+padding-bottom: 2px;
+}
+.legendContainer .legend_img{
+width: 16px;
+}
+/* checkbox样式图标,分层图例*/
+.legendContainer_fc_no input[type=checkbox]{
+cursor: default;
+-webkit-appearance: none;
+box-sizing: border-box;
+/* margin: 3px 3px 3px 4px; */
+padding: initial;
+border: initial;
+outline: none;
+background-image: url("../utilityIcons/legend_layer.png");
+cursor: pointer;
+}
+.legendContainer_fc_no .legend_text2{
+cursor: pointer;
+}
+.legendContainer_fc_no .legend_checkboxDiv2{
+margin-top: initial;
+line-height: 1;
+}
+.legendContainer_fc_no .legend_ul2{
+padding: 0px 1px 15px 1px;
+}
+.legendContainer{
+min-width: 130px;
+}
+#Widget_lyrList_legend{
+min-width: 130px;
+}
+#legendDiv{
+position: absolute;
+z-index: 2;
+}
+
+/* 分组图例2020.06.10 */
+.legendContainer_fc_no_zu .legend_checkboxDiv_fj{
+width: 5%;
+}
+.legendContainer_fc_no_zu .legend_text_fj{
+width: 95%;
+padding-left: 10%;
+padding-bottom: 2px;
+padding-top: 2px;
+}
+.legend_text_fj .legend_xzStyle3{
+display: block;
+}
+.legend_checkboxDiv_fj_child{
+width: 30%;
+}
+.legend_text_fj_child{
+width: 100%;
+}
+.legendContainer_fc_no_zu .legend_checkboxDiv2{
+margin-top: 0px;
+}
+.legendContainer_fc_no_zu input[type=checkbox]{
+margin:0px;
+}
+.legend_text_fj_child_ico{
+margin-right: 5px;	
+}
+.legendContainer_fc_no_zu .legend_ul2{
+padding: 0px;
+padding-bottom: 15px;
+}
+.legend_text2_span_no{
+margin-left: 3px;
+}
+.legend_xzStyle2{
+display: flex;
+align-items: center;
+}
+.legendContainer_fc_no .legend_xzStyle3{
+display: none;
+}
+.legendContainer_fc_no_zu .legend_xzStyle3{
+display: block;
+}
+.legendContainer_fc_no .legend_no_hover{
+cursor: default;   
+}

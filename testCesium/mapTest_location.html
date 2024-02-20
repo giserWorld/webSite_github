@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>mapTest_location</title>
+	<link rel="shortcut icon" href="#"/>
+	<link rel="stylesheet" type="text/css" href="../lib/cesium/1.113/CesiumUnminified/Widgets/widgets.css">
+	<link rel="stylesheet" type="text/css" href="./customPlugins/css/myCesium.css"> 
+	<script type="text/javascript" src="../lib/jquery/js/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="../lib/gisLib/turf.min.js"></script>
+	<script type="text/javascript" src="../lib/cesium/1.113/CesiumUnminified/Cesium.js"></script>
+	<script type="text/javascript" src="../lib/cesium/lib/CesiumNavigation.umd.js"></script>
+	<script type="text/javascript" src="./customPlugins/js/domUtilityFun.js"></script>
+	<script type="text/javascript" src="./customPlugins/js/myCesium.js"></script>
+	<style>
+		.baseStyle{
+			position:absolute;
+			top:100px;
+			left:100px;
+			color:white;
+			background: rgba(0,0,0,0.3);
+			padding: 15px;
+    		border: 4px;
+		}
+		.baseStyle button{
+			display: block;
+		    margin: 10px 0;
+   		}
+	</style>
+</head>
+<body>
+	<div class="cesiumDiv" id="cesiumDiv"></div>
+	<div class="baseStyle">
+		<div id="showRes" style="color:white;word-wrap: break-word;width: 250px">
+			<p>经度：<span id="showRes1"></span></p>
+			<p>纬度：<span id="showRes2"></span></p>
+			<p>海拔高度(公尺)：<span id="showRes3"></span></p>
+			<p>经纬度精准值(公尺)：<span id="showRes4"></span></p>
+			<p>高度精准值(公尺)：<span id="showRes5"></span></p>
+			<p>heading：<span id="showRes6"></span></p>
+			<p>speed：<span id="showRes7"></span></p>
+		  </div>
+		  <button onclick="getCurentPositon()">用户当前位置</button>
+		</div>
+	</div>
+	<script>
+	console.log("Cesium:"+Cesium.VERSION); //解决不显示源码问题
+	/******************************index-latest******************************
+	 * 1.Cesium高版本开始默认"禁止相机进入地下"
+	 * 2.CesiumJS1.102开始默认使用 WebGL2 上下文进行渲染。WebGL2 在所有平台上都得到广泛支持，这导致了跨设备（尤其是移动设备）的更好功能支持
+	*/
+/*******************************底图*******************************/
+	//卫星影像
+	var satelliteLayer_google=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({
+		credit:"谷歌影像",
+		//url:"http://mt3.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}",//无偏移谷歌影像  
+		//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=img_w&x={x}&y={y}&l={z}",//天地图影像  
+		url:"https://tiles.geovisearth.com/base/v1/img/{z}/{x}/{y}?token="+window.keyXingTu[0],
+		maximumLevel:18,
+		enablePickFeatures:false,//数据拾取
+	}),{brightness:1.3});
+	//天地图影像文字
+	var satelliteLayer_tdt_text=new Cesium.ImageryLayer(new Cesium.UrlTemplateImageryProvider({  
+		credit:"天地图影像文字",
+		//url:"http://t7.tianditu.com/DataServer?tk="+window.key_tdt[0]+"&T=cia_w&x={x}&y={y}&l={z}", 
+		url:"https://tiles.geovisearth.com/base/v1/cia/{z}/{x}/{y}?token="+window.keyXingTu[0],
+		maximumLevel:18,
+		enablePickFeatures:false,//数据拾取
+	}),{});
+    //单张图片服务
+    const mapsingleLayer=new Cesium.ImageryLayer(new Cesium.SingleTileImageryProvider({
+    	credit:"单张图片",
+		tileWidth:256,//1.108后版本必须设置
+		tileHeight:256,//1.108后版本必须设置
+        url:"../customPlugins/utilityIcons/globe.jpg",
+    }),{});
+	//四川天地图地形
+	/* var tdtTerrain_sichuan=new Cesium.CesiumTerrainProvider({
+		title:"四川天地图地形",
+		credit:"四川天地图地形",
+		url:"http://www.scgis.net:83/scgisterra/",//".terrain"格式的地形文件路径，cesium在线提供的地形格式
+		//url:"http://www.scgis.net.cn:8892/data/scgisterra/",//".terrain"格式的地形文件路径，cesium在线提供的地形格式
+		requestMetadata:false
+	}); */
+	//mars地形(老版本)
+	// var marsTerrain=new Cesium.CesiumTerrainProvider({
+	// 	credit:"mars地形",
+	// 	url:"http://data.marsgis.cn/terrain/",//".terrain"格式的地形文件路径，cesium在线提供的地形格式
+	// 	requestMetadata:false
+	// });
+	//地形(新版本)
+	var marsTerrain=new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("http://data.marsgis.cn/terrain/",{
+		credit:"mars地形",
+		//requestMetadata:false
+	}));
+	//空地形
+	//var terrain_none=new Cesium.EllipsoidTerrainProvider();
+	//世界地形
+	//var worldTerrain=Cesium.createWorldTerrain();
+/*******************************地图******************************/
+	//创建地图
+	var viewer=new Cesium.Viewer("cesiumDiv",{
+		animation:false,//时钟
+		timeline:false,//时间轴
+		shouldAnimate: true,//是否开启时间动画
+		infoBox:false,//是否显示拾取信息框
+		selectionIndicator:false,//要素选择框
+		fullscreenButton:false,//全屏组件
+		baseLayerPicker:false,//底图影像拾取器组件
+		geocoder:false,
+		homeButton:false,
+		navigationHelpButton:false,
+		sceneModePicker:false,
+		contextOptions: {//scene渲染设置
+			requestWebgl1: false,//是否使用webgl1渲染,默认false
+			webgl: { alpha: true}//webgl渲染配置,传递给canvas.getContext
+		},
+		mapProjection:new Cesium.WebMercatorProjection(),//2D模式使用的坐标系,默认“4326”，可选值:“GeographicProjection”或“WebMercatorProjection”
+		sceneMode:Cesium.SceneMode.SCENE3D,//初始场景模式,“Cesium.SceneMode.SCENE2D”、“Cesium.SceneMode.SCENE3D”
+		scene3DOnly:true,//如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源,当scene3DOnly为true时，只有SceneMode.SCENE3D有效
+		baseLayer:mapsingleLayer,//应用于地球的最底层图像层,代替imageryProvider
+		//imageryProvider:mapsingle,//底图影像提供者，默认加载cesium影像，必须设置该属性，否则加载cesium影像(系统默认一个地图影像会全局拉伸覆盖)
+		//地形
+		//terrainProvider:marsTerrain,//地形(老版本)
+		//terrain:marsTerrain,//地形(新版本)
+	});
+	//if(window.mars3d)viewer.mars=new mars3d.ViewerEx(viewer,{});//关联viewer地图
+	//viewer.extend(Cesium.viewerCesiumInspectorMixin);//Cesium调试器控件
+	const options={};//cesiumNavigation配置
+	options.enableCompass = true;//罗盘
+	options.enableZoomControls = true;//缩放控件
+	options.enableDistanceLegend = true;//比例尺
+	options.enableCompassOuterRing = true;//指南针外环
+	options.resetTooltip = "重置视图";
+	options.zoomInTooltip = "放大";
+	options.zoomOutTooltip = "缩小";
+	options.defaultResetView = Cesium.Rectangle.fromDegrees(92.326662109375,25.4514111328125,113.420412109375,35.745600585937495);//[xmin,ymin,xmax,ymax]                          
+	//viewer.extend(Cesium.viewerCesiumNavigationMixin,options);//扩展导航组件
+	const cesiumNavigation=new CesiumNavigation(viewer, options);//扩展导航组件
+	viewer.scene.screenSpaceCameraController.minimumZoomDistance=100;//相机的高度的最小值(m)
+	viewer.scene.screenSpaceCameraController.maximumZoomDistance=22000000;//相机高度的最大值(m)
+	//viewer.scene.screenSpaceCameraController._minimumZoomRate=30000;//设置相机缩小时的速率
+	//viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000;//设置相机放大时的速率
+	//myCesium.disableSeeUndergroud(viewer);//禁止相机进入地下
+	myCesium.setMountainCover(viewer);//设置山体是否遮挡要素
+	viewer.resolutionScale=window.devicePixelRatio;//设置渲染分辨率的缩放比例
+	viewer.scene.fxaa=false;//抗锯齿
+    viewer.scene.fog.enabled=true;//是否开启大气环境,倾斜视角的地平线大气
+    viewer.scene.postProcessStages.fxaa.enabled=false;//抗锯齿
+    viewer.scene.debugShowFramesPerSecond=true;//开启绘制效率调试
+    viewer.scene.globe.maximumScreenSpaceError=1.5;//默认2.0,用于驱动细节级别细化。较高的值会提供更好的性能，但会降低视觉质量。
+    viewer.scene.globe.baseColor=Cesium.Color.fromCssColorString("#11273C").withAlpha(1.0);//椭球体基础颜色
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);//取消双击事件
+    var hpRange=new Cesium.HeadingPitchRange(Cesium.Math.toRadians(0),Cesium.Math.toRadians(-90),0);
+    viewer.imageryLayers.add(satelliteLayer_google);
+    viewer.imageryLayers.add(satelliteLayer_tdt_text);
+/*******************************初始化视图*****************************/
+	//相机视角位置定位
+	var cameraView={
+	   destination:Cesium.Cartesian3.fromDegrees(101.48400434793372,25.166867719154283,1355483.5277913106),  
+	   duration:2,//相机定位时长
+       orientation:{  
+	        heading:Cesium.Math.toRadians(0),  
+	        pitch:Cesium.Math.toRadians(-90),  
+	        roll:Cesium.Math.toRadians(0)                            
+       }  	
+	};
+	//viewer.camera.setView(cameraView);
+	//Rectangle矩形范围定位,ol=cesium=truf=postgis=[xmin,ymin,xmax,ymax]
+	var rectExtent_sc=Cesium.Rectangle.fromDegrees(92.326662109375,25.4514111328125,113.420412109375,35.745600585937495);//[xmin,ymin,xmax,ymax]
+	var rectExtent_cd=Cesium.Rectangle.fromDegrees(103.021515000000079,30.0907620000000726,104.895093000000088,31.4369230000000073);//[xmin,ymin,xmax,ymax]
+    viewer.camera.setView({destination:rectExtent_sc,orientation:hpRange});
+/*******************************homeButton定位*****************************/	
+/* 	viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function(e){
+		e.cancel = true;
+		viewer.camera.flyTo(yunnan_camera);
+	}); */
+/******************************监控属性*****************************/	
+	viewer.scene.preRender.addEventListener(function(evt){
+		//var mapbBox=myCesium.getCurrentViewExtent(viewer);//当前视图范围
+	    var cameraHeight=myCesium.getCameraHeight(viewer);//当前视图相机真实高度(距离地面真是高度)
+	    //var cameraHeight_gc=myCesium.getCameraHeight_gc(viewer);//当前视图相机高度(包含高程)
+	    //var viewCenterPt=myCesium.getViewCenterPt(viewer);//当前视图中心
+		//var heading=viewer.camera.heading;
+	    //相机
+	    var cameraPosition=viewer.camera.position;//相机位置,笛卡尔坐标
+	    var position=viewer.camera.positionCartographic;//相机位置,弧度坐标
+		// $("#showRes").html(`
+		// 	<div>相机Lon:${Cesium.Math.toDegrees(position.longitude).toFixed(3)}</div>
+		// 	<div>相机Lat:${Cesium.Math.toDegrees(position.latitude).toFixed(3)}</div>
+		// 	<div>相机Height:${cameraHeight.toFixed(3)}</div>
+		// `);
+	});
+/******************************地图事件*****************************/	
+	var topGeoLayer=new Cesium.CustomDataSource("topGeoLayer");//顶部图层
+	var hoverHighLightLayer=new Cesium.PrimitiveCollection();
+    var clickHighLightLayer=new Cesium.PrimitiveCollection();
+    viewer.scene.primitives.add(hoverHighLightLayer);
+    viewer.scene.primitives.add(clickHighLightLayer);
+    //viewer.dataSources.add(top_geoLayer);//矢量图层
+ 	var viewerEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);//视图canvas事件处理器
+ 	var sceneEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);//场景canvas事件处理器
+ 	//viewer canvas事件
+    //viewerEventHandler.setInputAction((e)=>{mouseMoveFun(e)},Cesium.ScreenSpaceEventType.MOUSE_MOVE);//鼠标移动事件
+	//scene canvas事件
+    //sceneEventHandler.setInputAction((e)=>{mouseClickFun(e)},Cesium.ScreenSpaceEventType.LEFT_CLICK);//鼠标点击事件
+    //sceneEventHandler.setInputAction((e)=>{mouseDoubleClickFun(e)},Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);//鼠标双击事件
+    var _self={};
+/******************************相关代码*****************************/	
+
+	//用户当前位置
+	var userPosition={
+		position: [0, 0],
+		posEntity: undefined,
+		watchPositionId: 0,	
+	};
+	//获取用户当前位置
+	function getCurentPositon () {
+		//动态位置
+		const position= new Cesium.CallbackProperty(() => {
+		return Cesium.Cartesian3.fromDegrees(
+			userPosition.position[0],
+			userPosition.position[1],
+			0
+		);
+		}, false);
+		if (!viewer.entities.getById('userPos')) {
+			//点图标
+			userPosition.posEntity = new Cesium.Entity({
+				id: 'userPos',
+				name: '点图标',
+				position: position,
+				point: new Cesium.PointGraphics({
+				pixelSize: 16,
+				color: Cesium.Color.fromCssColorString('#40E0D0'),
+				// outlineColor:Cesium.Color.fromCssColorString('rgba(255,0,0,1.0)'),
+				// outlineWidth:2,
+				heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, //贴地
+				//scaleByDistance: new Cesium.NearFarScalar(1000,1.0,100000,0.0),//通过相机远近控制显示的比例大小
+				//scaleByDistance: new Cesium.NearFarScalar(1.5e2,1.0, 8.0e6,0.0),
+				}),
+			});
+			viewer.entities.add(userPosition.posEntity);
+		}
+		viewer.zoomTo(userPosition.posEntity);
+
+		//成功位置成功
+		const successCallback = (position) => {
+			// setLatitude(position.coords.latitude);
+			// setLongitude(position.coords.longitude);
+			// setError(null);
+			console.log('position', position);
+			//Position.coords:表示地理状态：它包括位置，地球上的经度和纬度，相关的海拔和速度
+			userPosition.position = [position.coords.longitude, position.coords.latitude];
+			// setShowRes({
+			// 	longitude: position.coords.longitude, //经度
+			// 	latitude: position.coords.latitude, //纬度
+			// 	altitude: position.coords.altitude, //距離海平面的高度,公尺
+			// 	accuracy: position.coords.accuracy, //经纬度的精準值,公尺
+			// 	altitudeAccuracy: position.coords.altitudeAccuracy, //高度的精準度,公尺
+			// 	heading: position.coords.heading, //代表你偏離北方多少度,0 度代表你向著正北方，照著順時針的方向遞增(90 度代表正東方，270 度代表正西方)
+			// 	speed: position.coords.speed,
+			// });
+			$('#showRes1').text(position.coords.longitude);
+			$('#showRes2').text(position.coords.latitude);
+			$('#showRes3').text(position.coords.altitude);
+			$('#showRes4').text(position.coords.accuracy);
+			$('#showRes5').text(position.coords.altitudeAccuracy);
+			$('#showRes6').text(position.coords.heading);
+			$('#showRes7').text(position.coords.speed);
+		};
+
+		//成功位置失败
+		const errorCallback = (error) => {
+			//setError(error.message);
+			console.log('error', error);
+		};
+
+		if (navigator.geolocation && !userPosition.watchPositionId) {
+			const options = {
+				enableHighAccuracy: true, // 请求高精度位置信息
+				timeout: 5000, // 请求位置信息的超时时间，单位为毫秒
+				maximumAge: 0, // 最大缓存位置信息的时间，单位为毫秒
+			};
+
+			//获取设备当前位置
+			//navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
+			//watchPosition 方法来实时监测位置变化,在设备的地理位置发生改变的时候自动被调用
+			// prettier-ignore
+			userPosition.watchPositionId = navigator.geolocation.watchPosition(successCallback, errorCallback, options);
+			// navigator.geolocation.getCurrentPosition(function (position) {
+			//   console.log('Latitude: ' + position.coords.latitude);
+			//   console.log('Longitude: ' + position.coords.longitude);
+			//   console.log('position', position);
+			// });
+		}
+	};	
+
+
+
+/*******************************函数*******************************/		
+console.log("viewerMap:",viewer); 
+
+/******************************scene场景鼠标doubleClick拾取地图要素(scene.canvas)*****************************/
+function mouseDoubleClickFun(doubleClickEvt,viewer){
+    let screenCoord=doubleClickEvt.position;//屏幕坐标
+    let picFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的单个地物
+}//e
+
+/******************************scene场景鼠标click拾取地图要素(scene.canvas)*****************************/
+function mouseClickFun(clickEvt){
+	if(clickHighLightLayer)clickHighLightLayer.removeAll();
+	var screenCoord=clickEvt.position;//屏幕坐标
+    var cameraRay=viewer.camera.getPickRay(screenCoord);//获取相机位置到点击的射线
+    var cartesian3=viewer.scene.globe.pick(cameraRay,viewer.scene);//拾取的椭球体表面位置
+    if(!cartesian3)return false;
+    var cartographic=viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian3);//cartesian3坐标转地理弧度坐标
+    var lon=Cesium.Math.toDegrees(cartographic.longitude);//经度
+    var lat=Cesium.Math.toDegrees(cartographic.latitude);//纬度
+    var ele=eval(cartographic.height)>0?cartographic.height:0;//地形海拔
+    var pickFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的多个地物
+    //const mapDiv=viewer.container;//获取地图容器div节点
+ 	//过滤不需要拾取的矢量要素
+ 	pickFeats=pickFeats.filter((item)=>{
+	    const entityFeature=item.id;//实体
+	    const primitiveFeature=item.primitive;//图元
+	    if(entityFeature&&entityFeature instanceof Cesium.Entity){
+	      const geoAttr=entityFeature.properties?.getValue(Cesium.JulianDate.now());
+	      return geoAttr.enablePickFeatures===false?false:true;
+	    }
+	    else if(primitiveFeature&&entityFeature instanceof Cesium.Primitive){
+	    	 const geoAttr=primitiveFeature.id||{};
+	    	 return geoAttr.enablePickFeatures===false?false:true;
+	    }
+ 	 });
+     console.log("pickFeats:",pickFeats);
+	 if(pickFeats.length>0){//拾取到要素
+		 const topFeat=pickFeats[pickFeats.length-1].id;//最顶部的几何要素
+		 const primitiveFeat=pickFeats[pickFeats.length-1].primitive;//primitive图元要素 
+		//entity
+		 if(topFeat instanceof Cesium.Entity){
+	    	 const entityId=topFeat.id;//唯一标识id
+	    	 const geoAttr = topFeat.properties.getValue(Cesium.JulianDate.now());//要素属性
+	    	 const layerId=geoAttr.layerId;//实体关联的图层id
+	    	 console.log("topFeat:",topFeat);
+     	 }
+		 //primitive
+	     else if(primitiveFeat instanceof Cesium.Primitive){
+	    	 const geoAttr=topFeat||{};//GeometryInstance.id为属性
+	    	 console.log("primitiveFeat:",primitiveFeat);
+	     }
+	 }
+}//e
+   
+
+/******************************viewer鼠标hover拾取地图要素(viewer.canvas)*****************************/	
+var hoverSelectedFeatId=-1;
+var hoverSelectedFeat={};//hover选中的实体
+function mouseMoveFun(moveEvt){
+  	 var screenCoord=moveEvt.endPosition;//屏幕坐标
+     var cameraRay=viewer.camera.getPickRay(screenCoord);//获取相机位置到点击的射线
+     var cartesian3=viewer.scene.globe.pick(cameraRay,viewer.scene);//拾取的椭球体表面位置
+     if(!cartesian3)return false;
+     var cartographic=viewer.scene.globe.ellipsoid.cartesianToCartographic(cartesian3);//cartesian3坐标转地理弧度坐标
+     var lon=Cesium.Math.toDegrees(cartographic.longitude);//经度
+     var lat=Cesium.Math.toDegrees(cartographic.latitude);//纬度
+     var ele=eval(cartographic.height)>0?cartographic.height:0;//地形海拔
+     var pickFeats=viewer.scene.drillPick(screenCoord);//拾取场景上面的多个地物
+  	 const mapDiv=viewer.container;//获取地图容器div节点
+  	 //过滤不需要拾取的矢量要素
+  	 pickFeats=pickFeats.filter((item)=>{
+	    const entityFeature=item.id;//实体
+	    if(entityFeature&&entityFeature instanceof Cesium.Entity){
+	      const geoAttr=entityFeature.properties?.getValue(Cesium.JulianDate.now());
+	      return geoAttr.enablePickFeatures===false?false:true;
+	    }
+  	 });
+	 if(pickFeats.length>0){//拾取到要素
+		 mapDiv.style.cursor='pointer';//当鼠标拾取地图要素后改变鼠标指针
+		 //let topEntity=myCesium.getTopEntityFeat(picFeats,_self.mapLyrCollection);//拾取上面的实体
+		 const topFeat=pickFeats[pickFeats.length-1].id;//最顶部的几何要素
+		 let primitiveFeat=pickFeats[pickFeats.length-1].primitive;//primitive图元要素 
+	     if(topFeat instanceof Cesium.Entity){//entity
+	    	 const entityId=topFeat.id;//唯一标识id
+	    	 const geoAttr = topFeat.properties.getValue(Cesium.JulianDate.now());//要素属性
+	    	 const layerId=geoAttr.layerId;//实体关联的图层id
+	         if(entityId!==hoverSelectedFeatId){//选中的不是同一个实体,则设置样式
+       	   		  if(hoverHighLightLayer) hoverHighLightLayer.removeAll();
+            	  var selectedEntity=viewer.entities.getById(hoverSelectedFeatId)||"";
+                  if(selectedEntity&&selectedEntity.billboard){
+                     selectedEntity.billboard.scale=1.0;
+                 	}
+                 	if(selectedEntity&&selectedEntity.point){
+                     var pixelSize=selectedEntity.point.pixelSize.getValue();
+                     if(Number.isInteger(pixelSize/1.337))selectedEntity.point.pixelSize=pixelSize/1.337;  
+                 	}
+                  var priFeat=myCesium.lightFeat_custom_pri(hoverHighLightLayer,entityFeat,"#00FFFF","true");//高亮要素
+                  hoverSelectedFeatId=entityId;
+                  hoverSelectedFeat=topFeat;
+	         }
+	       }
+	       else if(entityFeat&&(typeof(entityFeat)=="string")){//primitive
+	        //console.log(entityFeat);
+	       }
+	 }
+	 else{//没有拾取到要素
+	 	mapDiv.style.cursor="default";
+	 	if(hoverHighLightLayer) hoverHighLightLayer.removeAll();
+        var selectedEntity=viewer.entities.getById(hoverSelectedFeatId)||"";
+        if(selectedEntity&&selectedEntity.billboard){
+            selectedEntity.billboard.scale=1.0;
+        }
+        if(selectedEntity&&selectedEntity.point){
+           var pixelSize=selectedEntity.point.pixelSize.getValue();
+           if(Number.isInteger(pixelSize/1.337))selectedEntity.point.pixelSize=pixelSize/1.337;  
+        }
+        hoverSelectedFeatId=-1;
+        hoverSelectedFeat={};
+    }
+}//e
+	</script>
+</body>
+</html>

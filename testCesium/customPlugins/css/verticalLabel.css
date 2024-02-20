@@ -1,0 +1,79 @@
+@CHARSET "UTF-8";
+.verticalLabelDiv1{/* 标注div样式1(只有标题)*/
+top: -1000px;
+left: -1000px;
+width: 200px;
+height: 134px;
+background: rgba(42,42,42,.8);
+border-radius: 4px;
+position: absolute;
+background: url(../utilityIcons/div1.png);
+background-size: 100%;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+-webkit-animation: mymove 5s infinite;
+animation: mymove 5s infinite;
+animation-duration: 5s;
+animation-timing-function: ease;
+animation-delay: 0s;
+animation-iteration-count: infinite;
+animation-direction: normal;
+animation-fill-mode: none;
+animation-play-state: running;
+animation-name: mymove;
+}
+.verticalLabelDiv1 .title{
+position: inherit;
+top: 20px;
+left: 70px;
+font-size: 15px;
+text-align: left;
+color: rgba(255,255,255,1);
+text-shadow: 0 0 9px rgba(0,0,0,.75);
+}
+.verticalLabelDiv2{/* 标注div样式2(包含标题、内容)*/
+top: -1000px;
+left: -1000px;
+width: 200px;
+height: 157px;
+background: rgba(42,42,42,.8);
+border-radius: 4px;
+position: absolute;
+background: url(../utilityIcons/div2.png);
+background-size: 100%;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+-webkit-animation: mymove 5s infinite;
+animation: mymove 5s infinite;
+animation-duration: 5s;
+animation-timing-function: ease;
+animation-delay: 0s;
+animation-iteration-count: infinite;
+animation-direction: normal;
+animation-fill-mode: none;
+animation-play-state: running;
+animation-name: mymove;
+}
+.verticalLabelDiv2 .title{
+position: inherit;
+top: 22px;
+left: 70px;
+font-size: 14px;
+text-align: left;
+color: rgba(255,255,255,1);
+text-shadow: 0 0 9px rgba(0,0,0,.75);
+}
+.verticalLabelDiv2 .content{
+position: inherit;
+font-size: 14px;
+top: 50px;
+left: 50px;
+width: 140px;
+text-align: left;
+color: rgba(255,255,255,1);
+}
+.verticalLabelDiv1,.verticalLabelDiv2{
+pointer-events:none;
+}
